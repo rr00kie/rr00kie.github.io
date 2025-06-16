@@ -1,1 +1,531 @@
-<hi> Hello, World!</hi>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>홍수 위험 예측 시각화 기법 🌊📊</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #2196f3, #9c27b0);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .intro {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-left: 5px solid #2196f3;
+        }
+
+        .visualization-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .viz-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-top: 4px solid;
+        }
+
+        .viz-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+
+        .viz-card.map { border-top-color: #4caf50; }
+        .viz-card.chart { border-top-color: #ff9800; }
+        .viz-card.graph { border-top-color: #f44336; }
+        .viz-card.pie { border-top-color: #9c27b0; }
+
+        .viz-card h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .viz-card .emoji {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .example-viz {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 2px dashed #ddd;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-legend {
+            display: flex;
+            justify-content: space-around;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .color-item {
+            display: flex;
+            align-items: center;
+            margin: 0.25rem;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+            border: 1px solid #ccc;
+        }
+
+        .very-high { background-color: #d32f2f; }
+        .high { background-color: #f57c00; }
+        .moderate { background-color: #fbc02d; }
+        .low { background-color: #689f38; }
+        .very-low { background-color: #1976d2; }
+
+        .interactive-demo {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .demo-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .demo-btn {
+            background: white;
+            color: #333;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .demo-btn.active {
+            background: #2196f3;
+            color: white;
+        }
+
+        .demo-display {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            min-height: 150px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tips {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .tips h3 {
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+
+        .tip-item {
+            background: white;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .demo-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .sparkle {
+            animation: sparkle 2s infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .simple-scatter {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 2px;
+            height: 100px;
+            margin: 1rem 0;
+        }
+
+        .scatter-point {
+            background: #2196f3;
+            border-radius: 50%;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .scatter-point:hover {
+            transform: scale(1.5);
+            opacity: 1;
+        }
+
+        .simple-pie {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #ff6b6b 0deg 108deg,
+                #4ecdc4 108deg 180deg,
+                #45b7d1 180deg 252deg,
+                #96ceb4 252deg 324deg,
+                #ffeaa7 324deg 360deg
+            );
+            margin: 1rem auto;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .simple-pie:hover {
+            transform: scale(1.05);
+        }
+
+        .pie-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌊 홍수 위험 예측 시각화 기법 📊</h1>
+        <p>중학생도 쉽게 이해하는 데이터 시각화의 세계</p>
+    </div>
+
+    <div class="container">
+        <div class="intro">
+            <h2>🎯 시각화란 무엇일까요?</h2>
+            <p>
+                <strong>시각화(Visualization)</strong>는 복잡한 데이터를 그림이나 차트로 표현해서 한눈에 이해할 수 있게 만드는 기법입니다! 
+                📚 우리 도서관에서도 대출 통계를 그래프로 보여주거나, 이용자 분포를 지도로 표시하는 것이 바로 시각화예요.
+            </p>
+            <p>
+                이 연구에서는 <strong>홍수 위험을 예측</strong>하기 위해 AI와 다양한 시각화 기법을 사용했습니다. 
+                마치 일기예보에서 날씨를 색깔로 표시하는 것처럼, 홍수 위험도를 색깔로 표현해서 어느 지역이 위험한지 쉽게 알 수 있게 만들었어요! 🗺️✨
+            </p>
+        </div>
+
+        <div class="visualization-grid">
+            <div class="viz-card map">
+                <h3><span class="emoji">🗺️</span>지도 시각화</h3>
+                <p><strong>공간 정보를 색깔로 표현</strong></p>
+                <div class="example-viz">
+                    <p>🌧️ 강우량 분포 지도</p>
+                    <div class="color-legend">
+                        <div class="color-item">
+                            <div class="color-box very-high"></div>
+                            <span>매우 많음</span>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-box high"></div>
+                            <span>많음</span>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-box moderate"></div>
+                            <span>보통</span>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-box low"></div>
+                            <span>적음</span>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-box very-low"></div>
+                            <span>매우 적음</span>
+                        </div>
+                    </div>
+                </div>
+                <p>💡 <strong>왜 사용할까요?</strong><br>
+                지역별 차이를 한눈에 볼 수 있어요! 서울, 부산 같은 도시들의 홍수 위험도를 색깔로 구분해서 보여줍니다.</p>
+            </div>
+
+            <div class="viz-card chart">
+                <h3><span class="emoji">📈</span>산점도 그래프</h3>
+                <p><strong>실제값과 예측값 비교</strong></p>
+                <div class="example-viz">
+                    <p>🎯 AI 예측 정확도 확인</p>
+                    <div class="simple-scatter" id="scatterDemo"></div>
+                </div>
+                <p>💡 <strong>왜 사용할까요?</strong><br>
+                AI가 얼마나 정확하게 예측했는지 확인할 수 있어요! 점들이 대각선에 가까울수록 예측이 정확한 거예요.</p>
+            </div>
+
+            <div class="viz-card graph">
+                <h3><span class="emoji">📊</span>막대그래프</h3>
+                <p><strong>중요도 순서 표시</strong></p>
+                <div class="example-viz">
+                    <p>⭐ 홍수에 영향을 주는 요소들</p>
+                    <div style="display: flex; align-items: end; justify-content: space-around; height: 100px; margin: 1rem 0;">
+                        <div style="background: #ff6b6b; width: 30px; height: 80%; border-radius: 4px;"></div>
+                        <div style="background: #4ecdc4; width: 30px; height: 60%; border-radius: 4px;"></div>
+                        <div style="background: #45b7d1; width: 30px; height: 40%; border-radius: 4px;"></div>
+                        <div style="background: #96ceb4; width: 30px; height: 30%; border-radius: 4px;"></div>
+                        <div style="background: #ffeaa7; width: 30px; height: 20%; border-radius: 4px;"></div>
+                    </div>
+                    <p style="font-size: 0.8rem;">강우량 > 인구밀도 > 강 면적 > 녹지 > 기타</p>
+                </div>
+                <p>💡 <strong>왜 사용할까요?</strong><br>
+                어떤 요소가 홍수에 가장 큰 영향을 주는지 순서대로 볼 수 있어요!</p>
+            </div>
+
+            <div class="viz-card pie">
+                <h3><span class="emoji">🥧</span>파이차트</h3>
+                <p><strong>전체에서 차지하는 비율</strong></p>
+                <div class="example-viz">
+                    <p>📊 위험 요소 비율</p>
+                    <div class="simple-pie">
+                        <div class="pie-center">100%</div>
+                    </div>
+                    <p style="font-size: 0.8rem;">
+                        🔴 강우 30% | 🟢 노출 25% | 🔵 취약성 25% | 🟡 대응 20%
+                    </p>
+                </div>
+                <p>💡 <strong>왜 사용할까요?</strong><br>
+                전체 위험 중에서 각 요소가 차지하는 비율을 한눈에 볼 수 있어요!</p>
+            </div>
+        </div>
+
+        <div class="interactive-demo">
+            <h2>🎮 인터랙티브 데모: 홍수 위험도 시각화</h2>
+            <p>아래 버튼을 클릭해서 다양한 시각화를 체험해보세요!</p>
+            
+            <div class="demo-controls">
+                <button class="demo-btn active" onclick="showDemo('rainfall')">🌧️ 강우량</button>
+                <button class="demo-btn" onclick="showDemo('population')">👥 인구밀도</button>
+                <button class="demo-btn" onclick="showDemo('risk')">⚠️ 종합위험도</button>
+                <button class="demo-btn" onclick="showDemo('uncertainty')">❓ 불확실성</button>
+            </div>
+
+            <div class="demo-display" id="demoDisplay">
+                <h3>🌧️ 강우량 분포</h3>
+                <p>경기도 지역에 특히 많은 비가 내렸어요!</p>
+                <div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                    <div style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px;">
+                        <div style="background: #1976d2; height: 20px; border-radius: 2px;"></div>
+                        <div style="background: #d32f2f; height: 20px; border-radius: 2px;"></div>
+                        <div style="background: #f57c00; height: 20px; border-radius: 2px;"></div>
+                        <div style="background: #689f38; height: 20px; border-radius: 2px;"></div>
+                        <div style="background: #d32f2f; height: 20px; border-radius: 2px;"></div>
+                        <div style="background: #fbc02d; height: 20px; border-radius: 2px;"></div>
+                        <div style="background: #1976d2; height: 20px; border-radius: 2px;"></div>
+                        <div style="background: #689f38; height: 20px; border-radius: 2px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tips">
+            <h3>💡 도서관 운영에 활용할 수 있는 시각화 아이디어</h3>
+            
+            <div class="tip-item">
+                <strong>📚 도서 대출 현황 지도</strong><br>
+                지역별 도서 대출량을 색깔로 표시해서 어느 지역 주민들이 도서관을 많이 이용하는지 파악할 수 있어요!
+            </div>
+            
+            <div class="tip-item">
+                <strong>📊 이용자 연령대 분석</strong><br>
+                파이차트로 도서관 이용자의 연령대를 시각화하면 어떤 연령층을 위한 서비스가 더 필요한지 알 수 있어요!
+            </div>
+            
+            <div class="tip-item">
+                <strong>📈 월별 방문자 추이</strong><br>
+                막대그래프나 선 그래프로 월별 방문자 수를 보여주면 성수기와 비수기를 한눈에 파악할 수 있어요!
+            </div>
+            
+            <div class="tip-item">
+                <strong>🗺️ 전시관 관람 동선</strong><br>
+                대학역사미래전시관에서 관람객들의 동선을 지도에 표시하면 인기 있는 전시 공간을 알 수 있어요!
+            </div>
+        </div>
+
+        <div class="viz-card">
+            <h3><span class="emoji sparkle">✨</span>시각화의 힘</h3>
+            <p>
+                이 연구에서는 <strong>21개의 다양한 데이터</strong>를 분석해서 홍수 위험을 예측했어요. 
+                만약 숫자로만 표현했다면 이해하기 어려웠겠지만, 색깔과 그래프를 사용해서 
+                <strong>누구나 쉽게 이해</strong>할 수 있게 만들었답니다! 
+            </p>
+            <p>
+                📖 우리 도서관에서도 이런 시각화 기법을 사용하면 이용자들에게 더 나은 서비스를 제공할 수 있을 거예요!
+            </p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>🎓 대학도서관 / 기록관 / 대학역사미래전시관을 위한 데이터 시각화 가이드</p>
+        <p>📊 복잡한 데이터도 시각화하면 쉽게 이해할 수 있어요! ✨</p>
+    </div>
+
+    <script>
+        // 산점도 데모 생성
+        function createScatterDemo() {
+            const scatter = document.getElementById('scatterDemo');
+            if (!scatter) return;
+            
+            scatter.innerHTML = '';
+            for (let i = 0; i < 50; i++) {
+                const point = document.createElement('div');
+                point.className = 'scatter-point';
+                const size = Math.random() * 8 + 4;
+                point.style.width = size + 'px';
+                point.style.height = size + 'px';
+                point.style.gridColumn = Math.floor(Math.random() * 10) + 1;
+                point.style.gridRow = Math.floor(Math.random() * 10) + 1;
+                point.style.opacity = Math.random() * 0.5 + 0.5;
+                scatter.appendChild(point);
+            }
+        }
+
+        // 데모 표시 함수
+        function showDemo(type) {
+            const buttons = document.querySelectorAll('.demo-btn');
+            const display = document.getElementById('demoDisplay');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const demos = {
+                rainfall: {
+                    title: '🌧️ 강우량 분포',
+                    content: '경기도 지역에 특히 많은 비가 내렸어요!',
+                    colors: ['#1976d2', '#d32f2f', '#f57c00', '#689f38', '#d32f2f', '#fbc02d', '#1976d2', '#689f38']
+                },
+                population: {
+                    title: '👥 인구밀도',
+                    content: '서울, 부산 같은 대도시에 사람들이 많이 살고 있어요!',
+                    colors: ['#d32f2f', '#d32f2f', '#f57c00', '#1976d2', '#f57c00', '#1976d2', '#1976d2', '#689f38']
+                },
+                risk: {
+                    title: '⚠️ 종합 홍수 위험도',
+                    content: '모든 요소를 종합해서 계산한 최종 위험도예요!',
+                    colors: ['#f57c00', '#d32f2f', '#d32f2f', '#689f38', '#f57c00', '#fbc02d', '#689f38', '#1976d2']
+                },
+                uncertainty: {
+                    title: '❓ 예측 불확실성',
+                    content: 'AI 예측의 신뢰도를 나타내요. 어두울수록 더 확실한 예측!',
+                    colors: ['#666', '#333', '#999', '#ccc', '#666', '#999', '#333', '#aaa']
+                }
+            };
+
+            const demo = demos[type];
+            display.innerHTML = `
+                <h3>${demo.title}</h3>
+                <p>${demo.content}</p>
+                <div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                    <div style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px;">
+                        ${demo.colors.map(color => `<div style="background: ${color}; height: 20px; border-radius: 2px; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"></div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            createScatterDemo();
+        });
+    </script>
+</body>
+</html>
